@@ -10,6 +10,10 @@
             position: fixed; 
             transition: all 0.1s ease-out; /* 逃げる速度 */
             user-select: none; 
+            /* 読み込み時に一瞬表示されるのを防ぐため、
+              最初は非表示にしておきます。
+            */
+            visibility: hidden;
         }
         
         body {
@@ -26,7 +30,7 @@
     <!-- メインのモーダルウィンドウ -->
     <div id="age-modal" class="bg-gray-800 p-10 rounded-xl shadow-2xl text-center max-w-md mx-4 z-10">
         <h1 class="text-3xl font-bold mb-6">
-            パフパフ(⋈◍＞◡＜◍)✧♡
+            入れるものなら入ってみろ
         </h1>
         <p id="modal-message" class="text-xl mb-8 text-gray-300">
             あなたは18歳以上ですか？
@@ -47,9 +51,17 @@
         <p id="taunt-message" class="text-yellow-400 h-6 mt-6 font-bold text-lg"></p>
     </div>
 
+    <!-- 
+      ▼▼▼ バグ修正 ▼▼▼
+      以前のバージョンでは、この <button> タグの "中" に
+      HTMLコメントを書いてしまったため、バグが発生していました。
+      このバージョンでは、バグを修正し、
+      ontouchstart (スマホ対応) も正しく記述しています。
+    -->
     <button 
         id="yes-button"
         onmouseover="moveButton(this)"
+        ontouchstart="event.preventDefault(); moveButton(this)"
         onclick="enterSite()"
         class="bg-green-500 hover:bg-green-400 text-white font-bold py-3 px-10 rounded-lg shadow-lg cursor-pointer"
         style="z-index: 50;"
@@ -64,17 +76,27 @@
             "おっと！", "遅いね", "そこじゃない", "捕まえてごらん？", "残像だよ", "本気出して？"
         ];
         
-        window.onload = function() {
+        /**
+         * ページの読み込み完了時に実行
+         */
+        document.addEventListener('DOMContentLoaded', (event) => {
             const yesButton = document.getElementById('yes-button');
             const noButton = document.getElementById('no-button');
-            const rect = noButton.getBoundingClientRect(); 
 
-            yesButton.style.top = `${rect.top}px`;
-            yesButton.style.left = `${rect.left - yesButton.offsetWidth - 24}px`; // 24px = gap-6
-        }
+            // 0.1秒待ってからボタンを配置する (レイアウト崩れ対策)
+            setTimeout(() => {
+                const rect = noButton.getBoundingClientRect(); 
+
+                yesButton.style.top = `${rect.top}px`;
+                yesButton.style.left = `${rect.left - yesButton.offsetWidth - 24}px`; // 24px = gap-6
+                
+                // 準備ができたら「はい」ボタンを表示する
+                yesButton.style.visibility = 'visible';
+            }, 100);
+        });
 
         /**
-         * ボタンが逃げる処理
+         * ボタンが逃げる処理 (PC・スマホ共通)
          */
         function moveButton(button) {
             const viewportWidth = window.innerWidth;
@@ -123,9 +145,7 @@
         }
 
         /**
-         * ▼▼▼ 変更点 ▼▼▼
          * 「はい」を押した時の処理
-         * ページ遷移を削除し、シンプルな称賛メッセージに変更
          */
         function enterSite() {
             const modal = document.getElementById('age-modal');
@@ -140,8 +160,6 @@
                     まさか押せるとは。
                 </p>
             `;
-            
-            // ページ遷移（setTimeout）を削除
         }
     </script>
 
